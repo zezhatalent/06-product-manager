@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 import Reveal from '../lib/Reveal';
@@ -830,5 +831,142 @@ export function ContactMethodsGrid({ content }: { content: Content }) {
         </div>
       </div>
     </section>
+  );
+}
+
+/* ----------------------------- SVG WAVE DIVIDER ----------------------------- */
+export function WaveDivider({ color, flip }: { color?: string; flip?: boolean }) {
+  const t = useTheme().theme;
+  return (
+    <div className={`relative w-full overflow-hidden ${flip ? 'rotate-180' : ''}`} style={{ marginTop: -1, marginBottom: -1 }}>
+      <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-16 sm:h-20">
+        <motion.path
+          d="M0 60L48 54C96 48 192 36 288 42C384 48 480 72 576 78C672 84 768 72 864 60C960 48 1056 36 1152 42C1248 48 1344 60 1392 66L1440 72V120H1392C1344 120 1248 120 1152 120C1056 120 960 120 864 120C768 120 672 120 576 120C480 120 384 120 288 120C192 120 96 120 48 120H0V60Z"
+          fill={color || t.bg}
+          initial={{ pathLength: 0 }}
+          whileInView={{ pathLength: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 2, ease: "easeInOut" }}
+        />
+      </svg>
+    </div>
+  );
+}
+
+/* ----------------------------- FLOATING PARTICLES ----------------------------- */
+export function FloatingParticles({ count = 20 }: { count?: number }) {
+  const t = useTheme().theme;
+  const particles = Array.from({ length: count }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 4 + 2,
+    duration: Math.random() * 10 + 10,
+    delay: Math.random() * 5,
+  }));
+  
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full"
+          style={{
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: p.size,
+            height: p.size,
+            background: `${t.accent}40`,
+          }}
+          animate={{
+            y: [0, -30, 0],
+            opacity: [0.2, 0.8, 0.2],
+          }}
+          transition={{
+            duration: p.duration,
+            repeat: Infinity,
+            delay: p.delay,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ----------------------------- ANIMATED GRADIENT TEXT ----------------------------- */
+export function GradientText({ children, className }: { children: ReactNode; className?: string }) {
+  const t = useTheme().theme;
+  return (
+    <motion.span
+      className={`bg-clip-text text-transparent ${className}`}
+      style={{
+        backgroundImage: `linear-gradient(90deg, ${t.accent}, ${t.accent2}, ${t.accent})`,
+        backgroundSize: '200% auto',
+      }}
+      animate={{ backgroundPosition: ['0% center', '200% center'] }}
+      transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+    >
+      {children}
+    </motion.span>
+  );
+}
+
+/* ----------------------------- ANIMATED COUNTER RING ----------------------------- */
+export function AnimatedRing({ value, label, icon }: { value: number; label: string; icon: string }) {
+  const t = useTheme().theme;
+  const circumference = 2 * Math.PI * 45;
+  const offset = circumference - (value / 100) * circumference;
+  
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative w-28 h-28 sm:w-32 sm:h-32">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="none" stroke={t.border} strokeWidth="6" />
+          <motion.circle
+            cx="50" cy="50" r="45" fill="none" stroke={t.accent} strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            whileInView={{ strokeDashoffset: offset }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-2xl">{icon}</span>
+          <span className="text-xl sm:text-2xl font-bold" style={{ color: t.accent }}>{value}%</span>
+        </div>
+      </div>
+      <span className="mt-3 text-xs sm:text-sm font-medium text-center" style={{ color: t.muted }}>{label}</span>
+    </div>
+  );
+}
+
+/* ----------------------------- PARALLAX CARD ----------------------------- */
+export function ParallaxCard({ children, className }: { children: ReactNode; className?: string }) {
+  const [rotate, setRotate] = useState({ x: 0, y: 0 });
+  
+  const handleMouse = (e: React.MouseEvent) => {
+    const { clientX, clientY } = e;
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = (clientY - top - height / 2) / 20;
+    const y = (clientX - left - width / 2) / -20;
+    setRotate({ x, y });
+  };
+  
+  const reset = () => setRotate({ x: 0, y: 0 });
+  
+  return (
+    <motion.div
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      animate={{ rotateX: rotate.x, rotateY: rotate.y }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className={`perspective-1000 ${className || ''}`}
+      style={{ transformStyle: 'preserve-3d' }}
+    >
+      {children}
+    </motion.div>
   );
 }
